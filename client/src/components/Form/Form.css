@@ -1,0 +1,16 @@
+.input-text {
+	display: inline-block;
+	height: 19px;
+}
+
+.btn {
+	height: 25px;
+}
+
+.card {
+	width: 500px;
+	height: 95px;
+	border: 2px solid black;
+	border-radius: 15px;
+	margin: 5px auto;
+}
