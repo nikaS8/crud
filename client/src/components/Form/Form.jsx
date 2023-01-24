@@ -7,8 +7,6 @@ import {useDispatch, useSelector} from "react-redux";
 import {numAdded, initList, numDelete} from "../../store/numSlice";
 import axios from 'axios';
 
-//linter check
-
 export const Form = () => {
 	const [inputValue, setInputValue] = useState('');
 	const posts = useSelector(state => state.numbers)
@@ -17,10 +15,9 @@ export const Form = () => {
 
 	useEffect(() => {
 		axios.get("http://localhost:3000/api/get").then((responce) => {
-			console.log(responce.data, 'data');
 			dispatch(initList(responce.data));
 		})
-	}, []);
+	});
 
 	function checkNumber(num) {
 		const regex = /^[0-9]{3,10}$/;
@@ -36,15 +33,12 @@ export const Form = () => {
 
 	const handleSubmit = e => {
 		e.preventDefault();
-
 		let nextId = 0;
 		if (posts.content.length) {
 			nextId = parseInt(posts.content[posts.content.length - 1].id) + 1;
 		}
-
 		if (inputValue && checkNumber(inputValue)) {
 			dispatch((numAdded({id: nextId.toString(), number: code.value + inputValue})))
-			// alert('A form was submitted: ' + code.value + inputValue);
 			axios.post("http://localhost:3000/api/insert", {
 				number: code.value + inputValue,
 				id: nextId,
