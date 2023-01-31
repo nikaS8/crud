@@ -1,6 +1,6 @@
 FROM node
 WORKDIR /app
 COPY ./package.json ./
-RUN npm install -y
 ADD . .
+RUN npm install
 CMD node ./server.js
