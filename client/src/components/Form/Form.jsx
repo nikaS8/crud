@@ -4,8 +4,8 @@ import './Form.css';
 import { CODE_LIST } from '../../config/codeList';
 import { Dropdown } from '../Dropdown/Dropdown';
 import {useDispatch, useSelector} from "react-redux";
-import {numAdded, initList, numDelete} from "../../store/numSlice";
-import axios from 'axios';
+import {numAdded, numDelete} from "../../store/numSlice";
+import {ADD_NUM, DELETE_NUM_BY_ID, GET_NUMBERS} from "../../sagas/types/type";
 
 const URL = 'ws://127.0.0.1:3000';
 
@@ -17,9 +17,7 @@ export const Form = () => {
 	const dispatch = useDispatch();
 
 	useEffect(() => {
-		axios.get("http://localhost:3000/api/get").then((responce) => {
-			dispatch(initList(responce.data));
-		})
+		dispatch({ type: GET_NUMBERS })
 	},[]);
 
 	useEffect(() => {
@@ -64,19 +62,14 @@ export const Form = () => {
 		if (inputValue && checkNumber(inputValue)) {
 			ws.send(JSON.stringify({value: code.value + inputValue, id: nextId.toString(), flag: 1}));
 			dispatch((numAdded({id: nextId.toString(), number: code.value + inputValue})))
-			axios.post("http://localhost:3000/api/insert", {
-				number: code.value + inputValue,
-				id: nextId,
-			}).then((responce) => {
-				console.log(responce, 'responce');
-			})
+			dispatch({ type: ADD_NUM, num: { number: code.value + inputValue, id: nextId.toString()} })
 			setInputValue('')
 		}
 	}
 
 	const deleteNum = (numId) => {
 		ws.send(JSON.stringify({value: numId, flag: 2}));
-		axios.delete(`http://localhost:3000/api/delete/${numId}`);
+		dispatch({type: DELETE_NUM_BY_ID, id: numId})
 		dispatch(numDelete(numId));
 	}
 
