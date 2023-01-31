@@ -7,8 +7,11 @@ import {useDispatch, useSelector} from "react-redux";
 import {numAdded, initList, numDelete} from "../../store/numSlice";
 import axios from 'axios';
 
+const URL = 'ws://127.0.0.1:3000';
+
 export const Form = () => {
 	const [inputValue, setInputValue] = useState('');
+	const [ws, setWs] = useState(new WebSocket(URL));
 	const posts = useSelector(state => state.numbers)
 	const code = useSelector(state => state.code);
 	const dispatch = useDispatch();
@@ -17,7 +20,28 @@ export const Form = () => {
 		axios.get("http://localhost:3000/api/get").then((responce) => {
 			dispatch(initList(responce.data));
 		})
-	});
+	},[]);
+
+	useEffect(() => {
+		ws.onopen = () => {
+			console.log('WebSocket Connected');
+		}
+		ws.onmessage = async( e) => {
+			let message = JSON.parse(await e.data.text());
+			if (message.flag === 1) {
+				dispatch(numAdded({id: message.id, number: message.value}));
+			}
+			if (message.flag === 2) {
+				dispatch(numDelete(message.value));
+			}
+		}
+		return () => {
+			ws.onclose = () => {
+				console.log('WebSocket Disconnected');
+				setWs(new WebSocket(URL));
+			}
+		}
+	}, [ws.onopen, ws.onclose, ws.onmessage]);
 
 	function checkNumber(num) {
 		const regex = /^[0-9]{3,10}$/;
@@ -38,6 +62,7 @@ export const Form = () => {
 			nextId = parseInt(posts.content[posts.content.length - 1].id) + 1;
 		}
 		if (inputValue && checkNumber(inputValue)) {
+			ws.send(JSON.stringify({value: code.value + inputValue, id: nextId.toString(), flag: 1}));
 			dispatch((numAdded({id: nextId.toString(), number: code.value + inputValue})))
 			axios.post("http://localhost:3000/api/insert", {
 				number: code.value + inputValue,
@@ -50,6 +75,7 @@ export const Form = () => {
 	}
 
 	const deleteNum = (numId) => {
+		ws.send(JSON.stringify({value: numId, flag: 2}));
 		axios.delete(`http://localhost:3000/api/delete/${numId}`);
 		dispatch(numDelete(numId));
 	}
@@ -74,6 +100,5 @@ export const Form = () => {
 				)
 			})}
 		</div>
-		
 	)
 }
